@@ -1,6 +1,11 @@
 import requests
 import matplotlib.pyplot as plt
 
+TICKERS_URL = "https://brapi.dev/api/available"
+BASE_URL = "https://brapi.dev/api/"
+ENDPOINT = "quote/"
+API_TOKEN = "oFtEvw4GaKhPbbHs7Zgvij"
+
 
 def get_tickers(url):
     try:
@@ -13,45 +18,102 @@ def get_tickers(url):
         return [], []
 
 
-tickers_url = "https://brapi.dev/api/available"
-tickers_indexes, tickers_stocks = get_tickers(tickers_url)
+def choose_tickers(indexes, stocks):
+    if indexes or stocks:
+        user_choice = input(
+            "\nEscolha qual conjunto de dados deseja usar (índices/ações/ambos): "
+        ).lower()
 
-tickers = "null"
-
-if tickers_indexes or tickers_stocks:
-    user_choice = input(
-        "Escolha qual conjunto de dados deseja usar (índices/ações/ambos): "
-    ).lower()
-
-    if user_choice == "índices":
-        tickers = ",".join(tickers_indexes)
-    elif user_choice == "ações":
-        tickers = ",".join(tickers_stocks)
-    elif user_choice == "ambos":
-        tickers = ",".join(
-            [f"{a},{b}" for a, b in zip(tickers_indexes, tickers_stocks)]
-        )
+        if user_choice == "índices":
+            return ",".join(indexes)
+        elif user_choice == "ações":
+            return ",".join(stocks)
+        elif user_choice == "ambos":
+            return ",".join([f"{a},{b}" for a, b in zip(indexes, stocks)])
+        else:
+            print("Escolha inválida. Por favor, digite 'índices', 'ações' ou 'ambos'.")
+            return None
     else:
-        print("Escolha inválida. Por favor, digite 'índices', 'ações' ou 'ambos'.")
-else:
-    print("Nenhum dado disponível.")
+        print("Nenhum dado disponível.")
+        return None
 
-base_url = "https://brapi.dev/api/"
-endpoint = f"quote/{tickers}"
 
-full_url = base_url + endpoint
-params = {
-    "range": "6mo",
-    "interval": "1m",
-    "fundamental": "true",
-    "dividends": "true",
-    "token": "oFtEvw4GaKhPbbHs7Zgvij",
-}
+def fetch_data(url):
+    print(f"\nCarregando dados de {url}...")
 
-response = requests.get(full_url, params=params)
+    params = {
+        "range": "6mo",
+        # "interval": "1m",
+        # "fundamental": "true",
+        # "dividends": "true",
+        "token": API_TOKEN,
+    }
 
-if response.status_code == 200:
-    data = response.json()
-    print(data)
-else:
-    print(f"Request failed with status code {response.status_code}")
+    response = requests.get(url, params=params)
+
+    if response.status_code == 200:
+        print(f"Carregamento bem-sucedido para {url}.")
+        return response.json()
+    else:
+        print(f"Falha na solicitação com código de status {response.status_code}")
+        return None
+
+
+def find_working_combination(tickers_list):
+    successful_data = []
+
+    for i in range(len(tickers_list)):
+        modified_tickers = tickers_list[i:] + tickers_list[:i]
+        modified_url = BASE_URL + ENDPOINT + ",".join(modified_tickers)
+
+        data = fetch_data(modified_url)
+
+        if data:
+            successful_data.append(data)
+
+    return successful_data
+
+
+def try_single_tickers(tickers_list):
+    successful_data = []
+
+    for ticker in tickers_list:
+        url = BASE_URL + ENDPOINT + ticker
+        data = fetch_data(url)
+
+        if data:
+            successful_data.append(data)
+
+    return successful_data
+
+
+def main():
+    tickers_indexes, tickers_stocks = get_tickers(TICKERS_URL)
+    tickers = choose_tickers(tickers_indexes, tickers_stocks)
+
+    if tickers:
+        tickers_list = tickers.split(",")
+
+        successful_data_combination = find_working_combination(tickers_list)
+
+        if successful_data_combination:
+            print("\nDados das tentativas em combinação que foram bem-sucedidas:")
+            print(successful_data_combination)
+        else:
+            print(
+                "\nErro: Todas as tentativas em combinação falharam. Tentando novamente com tickers individuais.\n"
+            )
+
+            successful_data_single = try_single_tickers(tickers_list)
+
+            if successful_data_single:
+                print("\nDados das tentativas individuais que foram bem-sucedidas:")
+                print(successful_data_single)
+            else:
+                print(
+                    "\nErro: Todas as tentativas individuais também falharam. Verifique os tickers."
+                )
+
+
+if __name__ == "__main__":
+    main()
