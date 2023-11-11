@@ -60,18 +60,12 @@ def fetch_data(url):
 
 
 def find_working_combination(tickers_list):
-    successful_data = []
+    url = BASE_URL + ENDPOINT + ",".join(tickers_list)
 
-    for i in range(len(tickers_list)):
-        modified_tickers = tickers_list[i:] + tickers_list[:i]
-        modified_url = BASE_URL + ENDPOINT + ",".join(modified_tickers)
+    data = fetch_data(url)
 
-        data = fetch_data(modified_url)
-
-        if data:
-            successful_data.append(data)
-
-    return successful_data
+    if data:
+        return data
 
 
 def try_single_tickers(tickers_list):
@@ -94,25 +88,35 @@ def main():
     if tickers:
         tickers_list = tickers.split(",")
 
-        successful_data_combination = find_working_combination(tickers_list)
+        print("\nCarregando dados individuais...")
 
-        if successful_data_combination:
-            print("\nDados das tentativas em combinação que foram bem-sucedidas:")
-            print(successful_data_combination)
+        successful_data_single = try_single_tickers(tickers_list)
+
+        if successful_data_single:
+            print("\nDados das tentativas individuais que foram bem-sucedidas:")
+            print(successful_data_single)
+
+            # successful_tickers = [
+            #     result["symbol"]
+            #     for data in successful_data_single
+            #     for result in data.get("results", [])
+            # ]
+
+            # print("\nCarregando dados combinados...")
+
+            # successful_data_combination = find_working_combination(successful_tickers)
+
+            # if successful_data_combination:
+            #     print("\nDados das tentativas em combinação que foram bem-sucedidas:")
+            #     print(successful_data_combination)
+            # else:
+            #     print(
+            #         "\nErro: A tentativa de combinação falhou. Verifique os tickers ou parâmetros."
+            #     )
         else:
             print(
-                "\nErro: Todas as tentativas em combinação falharam. Tentando novamente com tickers individuais.\n"
+                "\nErro: Todas as tentativas individuais também falharam. Verifique os tickers."
             )
-
-            successful_data_single = try_single_tickers(tickers_list)
-
-            if successful_data_single:
-                print("\nDados das tentativas individuais que foram bem-sucedidas:")
-                print(successful_data_single)
-            else:
-                print(
-                    "\nErro: Todas as tentativas individuais também falharam. Verifique os tickers."
-                )
 
 
 if __name__ == "__main__":
