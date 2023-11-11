@@ -1,29 +1,55 @@
 import requests
 import matplotlib.pyplot as plt
 
-baseUrl = "https://brapi.dev/api/v2/crypto"
+
+def get_tickers(url):
+    try:
+        response = requests.get(url)
+        response.raise_for_status()
+        data = response.json()
+        return data.get("indexes", []), data.get("stocks", [])
+    except requests.RequestException as e:
+        print(f"A requisição falhou: {e}")
+        return [], []
+
+
+tickers_url = "https://brapi.dev/api/available"
+tickers_indexes, tickers_stocks = get_tickers(tickers_url)
+
+tickers = "null"
+
+if tickers_indexes or tickers_stocks:
+    user_choice = input(
+        "Escolha qual conjunto de dados deseja usar (índices/ações/ambos): "
+    ).lower()
+
+    if user_choice == "índices":
+        tickers = ",".join(tickers_indexes)
+    elif user_choice == "ações":
+        tickers = ",".join(tickers_stocks)
+    elif user_choice == "ambos":
+        print(tickers_indexes)
+        tickers = ",".join(
+            [f"{a},{b}" for a, b in zip(tickers_indexes, tickers_stocks)]
+        )
+    else:
+        print("Escolha inválida. Por favor, digite 'índices', 'ações' ou 'ambos'.")
+else:
+    print("Nenhum dado disponível.")
+
+base_url = f"https://brapi.dev/api/quote/{tickers}"
 params = {
-    "coin": "BTC,ETC",
-    "currency": "BRL",
-    "token": "eJGEyu8vVHctULdVdHYzQd",
+    "range": "6mo",
+    "interval": "1m",
+    "fundamental": "true",
+    "dividends": "true",
+    "token": "oFtEvw4GaKhPbbHs7Zgvij",
 }
 
-response = requests.get(baseUrl, params=params)
+response = requests.get(base_url, params=params)
 
 if response.status_code == 200:
     data = response.json()
-
-    coins = [coin["coinName"] for coin in data["coins"]]
-    prices = [coin["regularMarketPrice"] for coin in data["coins"]]
-
-    plt.figure(figsize=(8, 6))
-    plt.bar(coins, prices, color="skyblue")
-    plt.xlabel("Moedas")
-    plt.ylabel("Preço (em USD)")
-    plt.title("Preço das Moedas em Relação ao Dólar")
-    plt.xticks(rotation=45)
-
-    plt.tight_layout()
-    plt.show()
+    print(data)
 else:
     print(f"Request failed with status code {response.status_code}")

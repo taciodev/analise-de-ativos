@@ -1,0 +1,23 @@
+# Arquivos e pastas específicos para Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Ambiente virtual
+venv/
+
+# Arquivos de ambiente
+.env
+
+# Arquivos de log
+*.log
+
+# Outros arquivos e pastas específicos do seu projeto
+# ...
+
+# Ignorar arquivos gerados pela IDE (por exemplo, para o VS Code)
+.vscode/
+.idea/
+*.sublime-workspace
+*.sublime-project
