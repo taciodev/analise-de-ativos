@@ -37,7 +37,10 @@ if tickers_indexes or tickers_stocks:
 else:
     print("Nenhum dado disponível.")
 
-base_url = f"https://brapi.dev/api/quote/{tickers}"
+base_url = "https://brapi.dev/api/"
+endpoint = f"quote/{tickers}"
+
+full_url = base_url + endpoint
 params = {
     "range": "6mo",
     "interval": "1m",
@@ -46,7 +49,7 @@ params = {
     "token": "oFtEvw4GaKhPbbHs7Zgvij",
 }
 
-response = requests.get(base_url, params=params)
+response = requests.get(full_url, params=params)
 
 if response.status_code == 200:
     data = response.json()
