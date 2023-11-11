@@ -28,7 +28,6 @@ if tickers_indexes or tickers_stocks:
     elif user_choice == "ações":
         tickers = ",".join(tickers_stocks)
     elif user_choice == "ambos":
-        print(tickers_indexes)
         tickers = ",".join(
             [f"{a},{b}" for a, b in zip(tickers_indexes, tickers_stocks)]
         )
